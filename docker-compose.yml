@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # 1. Sistema Interno Corporativo en PHP + Apache (Cubre Tracks 1 al 11 + CTF)
+  intranet-php:
+    build: ./intranet-php
+    container_name: lab_intranet_php
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+  # 2. Plataforma de Práctica Adicional DVWA (PHP/MySQL)
+  dvwa:
+    image: vulnerables/web-dvwa:latest
+    container_name: lab_dvwa
+    ports:
+      - "8082:80"
+    environment:
+      - MYSQL_PASS=password
+    restart: unless-stopped
+
+  # 3. API Complementaria en Node.js + MongoDB
+  api:
+    build: ./api-node
+    container_name: lab_api_node
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - MONGO_URI=mongodb://db:27017/owasplab
+      - JWT_SECRET=my_super_secret_key_123
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: mongo:latest
+    container_name: lab_mongo_db
+    ports:
+      - "27017:27017"
+    restart: unless-stopped
