@@ -1,0 +1,2 @@
+id,usuario,rol,hash_md5,nota
+1,admin,administrador,21232f297a57a5a743894a0e4a801fc3,FLAG{A05_DIRECTORIO_EXPUESTO_ZAP}
