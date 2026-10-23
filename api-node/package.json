@@ -1,0 +1,16 @@
+{
+  "name": "owasp-node-labs",
+  "version": "1.0.0",
+  "description": "Vulnerable Node.js application for OWASP Top 10 training",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^5.11.15",
+    "jsonwebtoken": "^8.5.1",
+    "cookie-parser": "^1.4.5",
+    "pino": "^6.11.2"
+  }
+}
