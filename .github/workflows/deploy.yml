@@ -1,0 +1,13 @@
+name: Deploy Sin Seguridad (Vulnerable para Auditoría DevSecOps)
+on: [push]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # ❌ VULNERABLE: Compila como root y despliega sin escanear secretos (Gitleaks) ni CVEs (Trivy)
+      - name: Build & Deploy Directo
+        run: |
+          docker build -t mi-empresa/api:latest ./api-node
+          echo "Desplegando a producción sin filtros DevSecOps..."
