@@ -39,3 +39,13 @@ services:
     ports:
       - "27017:27017"
     restart: unless-stopped
+
+  # 4. Servidor del Atacante (C2) — Laboratorio Avanzado de XSS del Día 2.
+  #    Recibe por XSS las cookies robadas desde la intranet (puerto 8080) y las
+  #    almacena en SU PROPIA base de datos SQLite. Panel en http://localhost:5000
+  evil-collector:
+    build: ./evil-collector
+    container_name: lab_evil_collector
+    ports:
+      - "5000:80"
+    restart: unless-stopped

